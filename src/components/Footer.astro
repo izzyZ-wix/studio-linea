@@ -2,20 +2,20 @@
 const year = new Date().getFullYear();
 ---
 <footer class="site-footer" transition:persist="site-footer">
-  <div class="max-w-6xl mx-auto px-lg py-3xl flex flex-col md:flex-row md:items-start md:justify-between gap-xl">
-    <div class="flex flex-col gap-sm max-w-prose">
-      <span class="font-display text-lg text-ink">Studio Linea</span>
-      <p class="text-sm">Quiet luxury for the way you work.</p>
+  <div class="max-w-6xl mx-auto px-lg py-3xl flex flex-col md:flex-row md:items-end md:justify-between gap-xl">
+    <div class="flex flex-col gap-md max-w-prose">
+      <span class="font-display text-2xl text-ink">Studio Linea</span>
+      <p class="text-base text-ink-soft leading-relaxed">Quiet luxury for the way you work.</p>
     </div>
-    <nav>
-      <ul class="flex flex-col gap-sm text-sm">
-        <li><a href="/products">Shop</a></li>
-        <li><a href="/about">About</a></li>
-        <li><a href="/faq">FAQ</a></li>
+    <nav aria-label="Footer">
+      <ul class="flex flex-col sm:flex-row gap-md sm:gap-xl text-base text-ink-soft">
+        <li><a href="/products" class="site-footer-link">Shop</a></li>
+        <li><a href="/about" class="site-footer-link">About</a></li>
+        <li><a href="/faq" class="site-footer-link">FAQ</a></li>
       </ul>
     </nav>
   </div>
-  <div class="max-w-6xl mx-auto px-lg pb-xl text-xs">
-    <p>© {year} Studio Linea. All rights reserved.</p>
+  <div class="max-w-6xl mx-auto px-lg pb-xl pt-lg border-t border-rule">
+    <p class="text-sm text-mute">© {year} Studio Linea. All rights reserved.</p>
   </div>
 </footer>

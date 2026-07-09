@@ -4,6 +4,7 @@ import ProductCard from '../components/ProductCard.astro';
 import CategoryRail from '../components/CategoryRail.astro';
 import JsonLd from '../components/JsonLd.astro';
 import { productsV3 } from '@wix/stores';
+import { queryAboutContent } from '../lib/about';
 import { listStoreCategories } from '../utils/categories';
 import { resolveWixImageUrl } from '../utils/wix-image';
 import { SITE_DESCRIPTION, homePageJsonLd, DEFAULT_OG_IMAGE_ALT } from '../utils/seo';
@@ -20,6 +21,14 @@ try {
 }
 
 const storeCategories = await listStoreCategories();
+const about = await queryAboutContent();
+
+const heroImage =
+  resolveWixImageUrl(featured[0]?.media?.main?.image, 960, 1200) ?? '/og-image.png';
+const aboutImage =
+  about?.imageUrl ??
+  resolveWixImageUrl(featured[1]?.media?.main?.image ?? featured[0]?.media?.main?.image, 960, 720) ??
+  '/og-image.png';
 
 const homeDescription = SITE_DESCRIPTION;
 const homeOgImage = featured[0]
@@ -45,7 +54,15 @@ const homeJsonLd = Astro.site ? homePageJsonLd(Astro.site, homeDescription, feat
         data-decorative-slot="hero"
         style="aspect-ratio: 4/5; background-color: var(--color-paper-warm);"
       >
-        <!-- orchestrator injects <img src={decorativeImages.hero} …> here -->
+        <img
+          src={heroImage}
+          alt="Curated workspace with desk, organizers, and acoustic pieces"
+          width={960}
+          height={1200}
+          loading="eager"
+          fetchpriority="high"
+          decoding="async"
+        />
       </div>
     </div>
   </section>
@@ -95,17 +112,33 @@ const homeJsonLd = Astro.site ? homePageJsonLd(Astro.site, homeDescription, feat
       data-decorative-slot="about"
       style="aspect-ratio: 4/3; background-color: var(--color-paper-warm);"
     >
-      <!-- orchestrator injects <img src={decorativeImages.about} …> here -->
+      <img
+        src={aboutImage}
+        alt={about?.title ?? 'Studio Linea workspace detail'}
+        width={960}
+        height={720}
+        loading="lazy"
+        decoding="async"
+      />
     </div>
     <div class="flex flex-col gap-md max-w-prose">
       <hr class="editorial-rule w-16 ml-0" />
-      <h2 class="font-display text-3xl leading-tight">The story behind Studio Linea</h2>
-      <p class="text-ink leading-relaxed">
-        A short, brand-contextual paragraph about what makes Studio Linea distinct.
-      </p>
-      <p class="text-mute leading-relaxed">
-        A second paragraph adding warmth and detail to the brand story.
-      </p>
+      <h2 class="font-display text-3xl leading-tight">
+        {about?.title ?? 'The story behind Studio Linea'}
+      </h2>
+      {about?.excerpt ? (
+        <p class="text-ink leading-relaxed">{about.excerpt}</p>
+      ) : (
+        <p class="text-ink leading-relaxed">
+          Studio Linea curates desks, organizers, and acoustic pieces as one calm, coherent environment.
+        </p>
+      )}
+      {about?.subtitle && (
+        <p class="text-ink-soft leading-relaxed">{about.subtitle}</p>
+      )}
+      <a href="/about" class="text-accent underline-offset-4 hover:underline w-fit">
+        Read our story
+      </a>
     </div>
   </section>
 </Layout>

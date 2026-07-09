@@ -170,7 +170,12 @@
 .site-footer {
   border-top: 1px solid var(--color-rule);
   background: var(--color-paper-warm);
-  color: var(--color-mute);
+}
+.site-footer-link {
+  transition: color 160ms ease;
+}
+.site-footer-link:hover {
+  color: var(--color-ink);
 }
 
 /* ── View Transitions wiring (paired with Layout.astro <script>) ──────────────
