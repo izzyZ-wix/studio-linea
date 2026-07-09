@@ -1,0 +1,347 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import ProductPurchase from "../../components/ProductPurchase.tsx";
+import SeoTags from "../../components/SeoTags.astro";
+import { productsV3, inventoryItemsV3 } from "@wix/stores";
+import { resolveWixImageUrl } from "../../utils/wix-image";
+import { getBackInStockEnabled } from "../../utils/back-in-stock";
+import { fetchLiveOffers, offersForProduct } from "../../utils/discounts";
+
+export const wixMetadata = {
+  appDefId: "1380b703-ce81-ff05-f115-39571d94dfcd",
+  pageIdentifier: "wix.stores.sub_pages.product",
+  identifiers: {
+    slug: "STORES.PRODUCT.SLUG",
+  },
+};
+
+const { slug } = Astro.params;
+
+let product: any = null;
+try {
+  const result = await productsV3.getProductBySlug(slug!, {
+    fields: ["CURRENCY", "PLAIN_DESCRIPTION", "INFO_SECTION_PLAIN_DESCRIPTION", "MEDIA_ITEMS_INFO"],
+  });
+  product = result.product;
+} catch (err) {
+  console.error("[product-detail] getProductBySlug failed:", err);
+}
+
+if (!product) return Astro.redirect("/404");
+
+interface VariantStock { quantity: number; trackQuantity: boolean; preorderEnabled: boolean }
+const inventoryByVariant: Record<string, VariantStock> = {};
+try {
+  const inv: any = await inventoryItemsV3.queryInventoryItems({
+    filter: { productId: product._id },
+  });
+  for (const item of (inv?.items ?? inv?.inventoryItems ?? []) as any[]) {
+    if (!item.variantId) continue;
+    inventoryByVariant[item.variantId] = {
+      quantity: Number(item.quantity ?? 0),
+      trackQuantity: item.trackQuantity === true,
+      preorderEnabled: item.preorderInfo?.enabled === true,
+    };
+  }
+} catch (err) {
+  console.error("[product-detail] inventory query failed:", err);
+}
+
+let setupAccessories: Array<{
+  id: string;
+  name: string;
+  variantId?: string;
+  price?: number;
+  formattedPrice?: string;
+}> = [];
+
+if (slug === "walnut-writing-desk") {
+  try {
+    const accResult = await productsV3.getProductBySlug("cable-organizer-laptop-stand-set", {
+      fields: ["CURRENCY"],
+    });
+    const acc = accResult.product;
+    if (acc?._id) {
+      setupAccessories = [{
+        id: acc._id,
+        name: acc.name ?? "Cable Organizer & Laptop Stand Set",
+        variantId: acc.variantsInfo?.variants?.[0]?._id ?? undefined,
+        price: Number(acc.actualPriceRange?.minValue?.amount ?? 0),
+        formattedPrice: acc.actualPriceRange?.minValue?.formattedAmount ?? undefined,
+      }];
+    }
+  } catch (err) {
+    console.error("[product-detail] setup accessory fetch failed:", err);
+  }
+}
+
+const mainImageUrl = resolveWixImageUrl(product.media?.main?.image, 1200, 1500);
+const galleryItems: Array<{ url: string; alt: string }> = [];
+if (mainImageUrl) {
+  galleryItems.push({ url: mainImageUrl, alt: product.name ?? "Product" });
+}
+const mediaItems = product.media?.items ?? [];
+for (const item of mediaItems) {
+  const url = resolveWixImageUrl(item?.image ?? item?.url, 1200, 1500);
+  if (url && !galleryItems.some((g) => g.url === url)) {
+    galleryItems.push({ url, alt: item?.title ?? product.name ?? "Product detail" });
+  }
+}
+
+const price = product.actualPriceRange?.minValue?.formattedAmount;
+const priceAmount = Number(product.actualPriceRange?.minValue?.amount ?? 0);
+const currency = product.actualPriceRange?.minValue?.currency;
+const description = product.plainDescription?.replace(/<[^>]*>/g, "").trim();
+
+const infoSections: Array<{ title: string; body: string }> = [];
+const rawSections = product.infoSections ?? product.additionalInfoSections ?? [];
+const editorialTitles = ["The Material Story", "Architectural Considerations"];
+for (let i = 0; i < rawSections.length; i++) {
+  const section = rawSections[i];
+  const body = (section.plainDescription ?? section.description ?? "")
+    .replace(/<[^>]*>/g, "")
+    .trim();
+  if (!body) continue;
+  infoSections.push({
+    title: editorialTitles[i] ?? section.title ?? `Detail ${i + 1}`,
+    body,
+  });
+}
+if (infoSections.length === 0 && description) {
+  const sentences = description.split(/(?<=[.!?])\s+/);
+  const midpoint = Math.ceil(sentences.length / 2);
+  infoSections.push({
+    title: "The Material Story",
+    body: sentences.slice(0, midpoint).join(" "),
+  });
+  if (midpoint < sentences.length) {
+    infoSections.push({
+      title: "Architectural Considerations",
+      body: sentences.slice(midpoint).join(" "),
+    });
+  }
+}
+
+const backInStockEnabled = await getBackInStockEnabled();
+
+let productOffers: Array<{ name: string; offer?: string }> = [];
+try {
+  const offers = await fetchLiveOffers();
+  productOffers = offersForProduct(offers, product._id);
+} catch (err) {
+  console.error("[product-detail] fetchLiveOffers failed:", err);
+}
+
+const seoTags = product.seoData?.tags ?? [];
+const hasSeoTags = seoTags.some((t: any) => !t.disabled);
+
+const viewContentPayload = {
+  id: product._id,
+  name: product.name,
+  price: priceAmount,
+  currency,
+  origin: "Product Page",
+};
+---
+
+<Layout
+  title={product.name ?? "Product"}
+  description={description?.slice(0, 160)}
+  hasSeoTags={hasSeoTags}
+>
+  {hasSeoTags && <SeoTags slot="head" tags={seoTags} />}
+
+  <article class="product-detail">
+    <div class="max-w-6xl mx-auto px-lg py-3xl">
+      <a href="/products" class="text-mute text-xs uppercase tracking-widest hover:text-accent transition-colors">
+        &larr; The Collection
+      </a>
+
+      <div class="product-detail-layout">
+        <div class="product-gallery">
+          {galleryItems.length > 1 ? (
+            <div class="product-gallery-grid">
+              {galleryItems.map((img, i) => (
+                <figure class:list={["product-gallery-frame", { "product-gallery-hero": i === 0 }]}>
+                  <img src={img.url} alt={img.alt} loading={i === 0 ? "eager" : "lazy"} decoding="async" />
+                </figure>
+              ))}
+            </div>
+          ) : (
+            <figure class="product-gallery-frame product-gallery-hero">
+              {mainImageUrl && (
+                <img src={mainImageUrl} alt={product.name ?? "Product"} loading="eager" decoding="async" />
+              )}
+            </figure>
+          )}
+        </div>
+
+        <div class="product-detail-info">
+          <p class="text-mute text-xs uppercase tracking-widest">Studio Linea</p>
+          <h1 class="font-display text-4xl md:text-5xl leading-tight mt-sm">{product.name}</h1>
+          {price && <p class="text-xl text-ink-soft mt-md">{price}</p>}
+          {description && (
+            <p class="text-ink-soft leading-relaxed mt-lg">{description}</p>
+          )}
+
+          {productOffers.length > 0 && (
+            <div class="offer-callout mt-xl">
+              {productOffers.map((o) => (
+                <div class="offer-callout-item">
+                  <span class="offer-callout-badge">Offer</span>
+                  <div>
+                    <p class="offer-callout-name">{o.name}</p>
+                    {o.offer && o.offer !== o.name && (
+                      <p class="offer-callout-detail">{o.offer}</p>
+                    )}
+                  </div>
+                </div>
+              ))}
+              <p class="offer-callout-foot">Applied automatically at checkout.</p>
+            </div>
+          )}
+
+          <div class="mt-xl">
+            <ProductPurchase
+              client:load
+              product={product}
+              inventoryByVariant={inventoryByVariant}
+              backInStockEnabled={backInStockEnabled}
+              priceAmount={priceAmount}
+              setupAccessories={setupAccessories}
+            />
+          </div>
+
+          {infoSections.length > 0 && (
+            <div class="product-accordions mt-2xl">
+              {infoSections.map((section) => (
+                <details class="product-accordion">
+                  <summary class="product-accordion-summary">{section.title}</summary>
+                  <div class="product-accordion-body">
+                    <p>{section.body}</p>
+                  </div>
+                </details>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  </article>
+</Layout>
+
+<script
+  type="application/json"
+  id="analytics-view-content"
+  is:inline
+  set:html={JSON.stringify(viewContentPayload)}
+/>
+<script>
+  import { trackEvent } from "../../utils/analytics";
+  const el = document.getElementById("analytics-view-content");
+  if (el?.textContent) {
+    trackEvent("ViewContent", JSON.parse(el.textContent));
+  }
+</script>
+
+<style>
+  .product-detail-layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--spacing-2xl);
+    margin-top: var(--spacing-2xl);
+    align-items: start;
+  }
+  @media (min-width: 768px) {
+    .product-detail-layout {
+      grid-template-columns: 7fr 5fr;
+      gap: var(--spacing-4xl);
+    }
+  }
+
+  .product-gallery-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-md);
+  }
+
+  .product-gallery-frame {
+    margin: 0;
+    background: var(--color-cream);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    aspect-ratio: 4 / 5;
+  }
+
+  .product-gallery-hero {
+    grid-column: 1 / -1;
+    aspect-ratio: 16 / 10;
+  }
+
+  .product-gallery-frame img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 600ms ease;
+  }
+
+  .product-gallery-frame:hover img {
+    transform: scale(1.02);
+  }
+
+  .product-detail-info {
+    display: flex;
+    flex-direction: column;
+  }
+  @media (min-width: 768px) {
+    .product-detail-info {
+      position: sticky;
+      top: var(--spacing-2xl);
+    }
+  }
+
+  .product-accordions {
+    display: flex;
+    flex-direction: column;
+    border-top: 1px solid var(--color-rule);
+  }
+
+  .product-accordion {
+    border-bottom: 1px solid var(--color-rule);
+  }
+
+  .product-accordion-summary {
+    font-family: var(--font-display);
+    font-size: 1.125rem;
+    padding: var(--spacing-lg) 0;
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--color-ink);
+  }
+
+  .product-accordion-summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .product-accordion-summary::after {
+    content: "+";
+    font-family: var(--font-body);
+    font-size: 1.25rem;
+    color: var(--color-mute);
+    transition: transform 200ms ease;
+  }
+
+  .product-accordion[open] .product-accordion-summary::after {
+    content: "−";
+  }
+
+  .product-accordion-body {
+    padding-bottom: var(--spacing-lg);
+    color: var(--color-ink-soft);
+    line-height: 1.7;
+    font-size: 0.9375rem;
+  }
+</style>

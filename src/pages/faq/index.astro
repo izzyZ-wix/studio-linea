@@ -1,0 +1,53 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { queryFaqItems } from "../../lib/faq";
+
+const faqItems = await queryFaqItems();
+---
+
+<Layout
+  title="FAQ"
+  description="Answers about Studio Linea shipping, care, returns, and warranty."
+>
+  <div class="max-w-6xl mx-auto px-lg py-4xl">
+    <header class="mb-3xl max-w-prose">
+      <p class="font-body text-xs uppercase tracking-[0.2em] text-mute mb-md">
+        Support
+      </p>
+      <h1 class="font-display text-4xl md:text-5xl leading-tight mb-lg">
+        Frequently asked questions
+      </h1>
+      <p class="text-ink-soft leading-relaxed">
+        Practical answers about ordering, delivery, and caring for your Studio Linea workspace.
+      </p>
+    </header>
+
+    {faqItems.length > 0 ? (
+      <section class="faq-section max-w-3xl">
+        {faqItems.map((item) => (
+          <details class="faq-item" id={item._id}>
+            <summary class="faq-question">
+              <span>{item.question}</span>
+              <svg
+                class="faq-toggle"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </summary>
+            <div class="faq-answer" set:html={item.answer} />
+          </details>
+        ))}
+      </section>
+    ) : (
+      <p class="text-mute">No questions available yet.</p>
+    )}
+  </div>
+</Layout>

@@ -1,0 +1,20 @@
+---
+const year = new Date().getFullYear();
+---
+<footer class="site-footer" transition:persist="site-footer">
+  <div class="max-w-6xl mx-auto px-lg py-3xl flex flex-col md:flex-row md:items-start md:justify-between gap-xl">
+    <div class="flex flex-col gap-sm max-w-prose">
+      <span class="font-display text-lg text-ink">Studio Linea</span>
+      <p class="text-sm">Quiet luxury for the way you work.</p>
+    </div>
+    <nav>
+      <ul class="flex flex-col gap-sm text-sm">
+        <li><a href="/about">About</a></li>
+        <li><a href="/faq">FAQ</a></li>
+      </ul>
+    </nav>
+  </div>
+  <div class="max-w-6xl mx-auto px-lg pb-xl text-xs">
+    <p>© {year} Studio Linea. All rights reserved.</p>
+  </div>
+</footer>

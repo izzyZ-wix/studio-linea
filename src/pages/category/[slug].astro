@@ -1,0 +1,127 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import ProductCard from "../../components/ProductCard.astro";
+import CategoryRail from "../../components/CategoryRail.astro";
+import {
+  getCategoryBySlug,
+  listProductsInCategory,
+  listStoreCategories,
+} from "../../utils/categories";
+
+const PAGE_SIZE = 24;
+const { slug } = Astro.params;
+
+if (!slug) {
+  return Astro.redirect("/products");
+}
+
+const category = await getCategoryBySlug(slug);
+if (!category) {
+  return new Response("Category not found", { status: 404 });
+}
+
+const cursor = Astro.url.searchParams.get("cursor") ?? undefined;
+const page = await listProductsInCategory(category.id, {
+  limit: PAGE_SIZE,
+  cursor,
+});
+
+const productList = page.items.filter((p: any) => p.ribbon?.name !== "Gift Card");
+const allCategories = await listStoreCategories();
+
+const impressionContents = productList.map((p, index) => ({
+  id: p._id,
+  name: p.name,
+  price: Number(p.actualPriceRange?.minValue?.amount ?? 0),
+  currency: p.actualPriceRange?.minValue?.currency ?? undefined,
+  position: index + 1,
+}));
+
+function pageHref(c: string | null): string | null {
+  if (!c) return null;
+  const params = new URLSearchParams();
+  params.set("cursor", c);
+  return `/category/${category!.slug}?${params.toString()}`;
+}
+---
+
+<Layout
+  title={category.name}
+  description={category.description ?? `Pieces curated for ${category.name} — considered office equipment from Studio Linea.`}
+>
+  <section class="py-3xl border-b border-rule">
+    <div class="max-w-6xl mx-auto px-lg">
+      <nav class="breadcrumbs" aria-label="Breadcrumb">
+        <a href="/" data-astro-prefetch="hover">Home</a>
+        <span aria-hidden="true">&middot;</span>
+        <a href="/products" data-astro-prefetch="hover">Collection</a>
+        <span aria-hidden="true">&middot;</span>
+        <span aria-current="page">{category.name}</span>
+      </nav>
+      <p class="text-mute text-xs uppercase tracking-widest mt-md">Curated Spaces</p>
+      <h1 class="font-display text-4xl md:text-5xl leading-tight mt-sm">{category.name}</h1>
+      {category.description ? (
+        <p class="text-ink-soft leading-relaxed mt-lg max-w-prose">{category.description}</p>
+      ) : (
+        <p class="text-ink-soft leading-relaxed mt-lg max-w-prose">
+          A considered arrangement of desks, organizers, and acoustic pieces — composed as one quiet, coherent environment.
+        </p>
+      )}
+    </div>
+    {category.imageUrl && (
+      <div class="mt-2xl max-w-6xl mx-auto px-lg" aria-hidden="true">
+        <div class="rounded-md overflow-hidden" style="aspect-ratio: 21/9; background: var(--color-paper-warm);">
+          <img
+            src={category.imageUrl}
+            alt=""
+            loading="lazy"
+            decoding="async"
+            class="w-full h-full object-cover"
+          />
+        </div>
+      </div>
+    )}
+  </section>
+
+  <CategoryRail
+    categories={allCategories}
+    activeSlug={category.slug}
+    prevHref={pageHref(page.prevCursor)}
+    nextHref={pageHref(page.nextCursor)}
+  />
+
+  <section class="py-3xl">
+    <div class="max-w-6xl mx-auto px-lg">
+      {productList.length === 0 ? (
+        <p class="text-mute text-center py-4xl">
+          This space is being composed — please return shortly.
+        </p>
+      ) : (
+        <div class="product-grid">
+          {productList.map((product, idx) => (
+            <ProductCard product={product} index={idx} />
+          ))}
+        </div>
+      )}
+    </div>
+  </section>
+</Layout>
+
+<script
+  type="application/json"
+  id="analytics-impressions"
+  is:inline
+  set:html={JSON.stringify(impressionContents)}
+/>
+<script>
+  import { trackEvent } from "../../utils/analytics";
+  function fireImpressions() {
+    const el = document.getElementById("analytics-impressions");
+    if (!el?.textContent) return;
+    trackEvent("AddProductImpression", {
+      contents: JSON.parse(el.textContent),
+      origin: "Category Page",
+    });
+  }
+  document.addEventListener("astro:page-load", fireImpressions);
+</script>

@@ -1,0 +1,67 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { queryAboutContent } from "../../lib/about";
+
+const about = await queryAboutContent();
+const title = about?.title ?? "About";
+const description = about?.excerpt ?? "The Studio Linea design manifesto.";
+---
+
+<Layout title={title} description={description}>
+  {about ? (
+    <article>
+      <header class="about-hero">
+        <div class="max-w-6xl mx-auto px-lg">
+          <div class="grid grid-cols-1 md:grid-cols-12 gap-xl items-end">
+            <div class="md:col-span-8">
+              <p class="about-hero-kicker">{about.subtitle}</p>
+              <h1 class="about-hero-title">{about.title}</h1>
+            </div>
+            <div class="md:col-span-4 md:text-right">
+              <span class="font-body text-xs uppercase tracking-[0.2em] text-mute">
+                Issue 01 · Studio Linea
+              </span>
+            </div>
+          </div>
+          {about.excerpt && (
+            <blockquote class="about-hero-excerpt">{about.excerpt}</blockquote>
+          )}
+        </div>
+      </header>
+
+      <section class="about-body">
+        <div class="max-w-6xl mx-auto px-lg">
+          <div class="about-body-inner">
+            <aside class="about-body-rail flex flex-col gap-lg">
+              <span class="about-body-stamp">Design manifesto</span>
+              {about.imageUrl && (
+                <figure class="rounded-md overflow-hidden">
+                  <img
+                    src={about.imageUrl}
+                    alt=""
+                    width={480}
+                    height={360}
+                    loading="lazy"
+                    class="w-full h-auto object-cover"
+                  />
+                </figure>
+              )}
+              <hr class="editorial-rule w-12" />
+              <p class="text-xs uppercase tracking-[0.18em] text-mute leading-relaxed">
+                Quiet luxury editorial workspace
+              </p>
+            </aside>
+            <div
+              class="about-manifesto"
+              set:html={about.manifesto}
+            />
+          </div>
+        </div>
+      </section>
+    </article>
+  ) : (
+    <div class="max-w-6xl mx-auto px-lg py-4xl">
+      <p class="text-mute">Content coming soon.</p>
+    </div>
+  )}
+</Layout>

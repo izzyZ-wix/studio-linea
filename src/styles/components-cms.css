@@ -1,0 +1,201 @@
+/* src/styles/components-cms.css — CMS pack (About manifesto + FAQ accordion) */
+
+/* ── About manifesto ───────────────────────────────────────────────────── */
+.about-hero {
+  position: relative;
+  padding-block: var(--spacing-4xl) var(--spacing-3xl);
+  border-bottom: 1px solid var(--color-rule);
+}
+
+.about-hero-kicker {
+  font-family: var(--font-body);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--color-mute);
+  margin-bottom: var(--spacing-lg);
+}
+
+.about-hero-title {
+  font-family: var(--font-display);
+  font-size: clamp(2.75rem, 7vw, 5.5rem);
+  font-weight: 400;
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+  color: var(--color-ink);
+  max-width: 14ch;
+}
+
+.about-hero-excerpt {
+  margin-top: var(--spacing-2xl);
+  padding-inline-start: var(--spacing-xl);
+  border-inline-start: 2px solid var(--color-accent);
+  font-family: var(--font-display);
+  font-size: clamp(1.25rem, 2.5vw, 1.75rem);
+  font-style: italic;
+  line-height: 1.45;
+  color: var(--color-ink-soft);
+  max-width: 28rem;
+}
+
+.about-body {
+  padding-block: var(--spacing-3xl) var(--spacing-4xl);
+}
+
+.about-body-inner {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--spacing-3xl);
+}
+
+@media (min-width: 48rem) {
+  .about-body-inner {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+    gap: var(--spacing-4xl);
+    align-items: start;
+  }
+}
+
+.about-body-rail {
+  position: sticky;
+  top: calc(var(--spacing-3xl) + 3rem);
+}
+
+.about-body-stamp {
+  font-family: var(--font-body);
+  font-size: 0.6875rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-mute);
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  display: none;
+}
+
+@media (min-width: 48rem) {
+  .about-body-stamp {
+    display: block;
+  }
+}
+
+.about-manifesto {
+  font-family: var(--font-body);
+  font-size: 1.0625rem;
+  line-height: 1.75;
+  color: var(--color-ink-soft);
+}
+
+.about-manifesto p {
+  margin-bottom: var(--spacing-lg);
+}
+
+.about-manifesto p:last-child {
+  margin-bottom: 0;
+}
+
+.about-manifesto em {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 1.2em;
+  color: var(--color-ink);
+}
+
+.about-manifesto h2 {
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  font-weight: 400;
+  color: var(--color-ink);
+  margin-top: var(--spacing-2xl);
+  margin-bottom: var(--spacing-md);
+  padding-top: var(--spacing-xl);
+  border-top: 1px solid var(--color-rule);
+}
+
+.about-manifesto h2:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+
+.about-manifesto strong {
+  font-weight: 600;
+  color: var(--color-accent);
+}
+
+/* ── FAQ accordion ───────────────────────────────────────────────────────── */
+.faq-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border-top: 1px solid var(--color-rule);
+}
+
+.faq-item {
+  border-bottom: 1px solid var(--color-rule);
+}
+
+.faq-item[open] .faq-toggle {
+  transform: rotate(180deg);
+}
+
+.faq-question {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-lg);
+  padding-block: var(--spacing-lg);
+  cursor: pointer;
+  list-style: none;
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  line-height: 1.35;
+  color: var(--color-ink);
+  transition: color 160ms ease;
+}
+
+.faq-question::-webkit-details-marker {
+  display: none;
+}
+
+.faq-question::marker {
+  content: "";
+}
+
+.faq-item:hover .faq-question,
+.faq-item[open] .faq-question {
+  color: var(--color-accent);
+}
+
+.faq-toggle {
+  flex-shrink: 0;
+  width: 1.25rem;
+  height: 1.25rem;
+  color: var(--color-mute);
+  transition: transform 220ms ease, color 160ms ease;
+}
+
+.faq-item[open] .faq-toggle {
+  color: var(--color-accent);
+}
+
+.faq-answer {
+  padding-bottom: var(--spacing-xl);
+  padding-inline-end: var(--spacing-2xl);
+  font-size: 0.9375rem;
+  line-height: 1.7;
+  color: var(--color-ink-soft);
+}
+
+.faq-answer p {
+  margin-bottom: var(--spacing-md);
+}
+
+.faq-answer p:last-child {
+  margin-bottom: 0;
+}
+
+.faq-answer strong {
+  font-weight: 600;
+  color: var(--color-ink);
+}

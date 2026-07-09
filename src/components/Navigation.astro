@@ -1,0 +1,75 @@
+---
+import CartBadge from "./CartBadge.tsx";
+import { listStoreCategories } from "../utils/categories";
+
+const pathname = Astro.url.pathname;
+function isActive(prefix: string): boolean {
+  if (prefix === "/products") {
+    return pathname === "/products" || pathname.startsWith("/products/");
+  }
+  if (prefix === "/category") {
+    return pathname.startsWith("/category/");
+  }
+  return pathname === prefix || pathname.startsWith(`${prefix}/`);
+}
+
+const navCategories = await listStoreCategories();
+---
+<header class="site-nav" transition:persist="site-nav">
+  <nav class="max-w-6xl mx-auto px-lg flex items-center justify-between gap-lg py-md">
+    <a href="/" class="font-display text-lg tracking-tight">Studio Linea</a>
+
+    <input type="checkbox" id="nav-toggle" class="peer hidden" aria-hidden="true" />
+    <label
+      for="nav-toggle"
+      class="md:hidden inline-flex flex-col gap-[5px] cursor-pointer"
+      aria-label="Toggle navigation"
+    >
+      <span class="block h-[2px] w-6 bg-ink"></span>
+      <span class="block h-[2px] w-6 bg-ink"></span>
+      <span class="block h-[2px] w-6 bg-ink"></span>
+    </label>
+
+    <div
+      class="hidden peer-checked:flex md:flex absolute md:static top-full left-0 right-0 md:right-auto
+             flex-col md:flex-row gap-md md:gap-lg items-start md:items-center
+             bg-paper md:bg-transparent border-b md:border-0 border-rule px-lg md:px-0 py-md md:py-0"
+    >
+      <ul class="flex flex-col md:flex-row gap-md md:gap-lg items-start md:items-center">
+        <li class="site-nav-item"><a href="/about">About</a></li>
+        <li class="site-nav-item"><a href="/faq">FAQ</a></li>
+        <li class={`site-nav-item${navCategories.length > 0 ? " has-submenu" : ""}`}>
+          <a
+            href="/products"
+            class="site-nav-link"
+            data-astro-prefetch="hover"
+            aria-current={isActive("/products") || isActive("/category") ? "page" : undefined}
+            aria-haspopup={navCategories.length > 0 ? "true" : undefined}
+          >Shop</a>
+          {navCategories.length > 0 && (
+            <ul class="site-nav-submenu" aria-label="Shop — Products and Curated Spaces">
+              <li>
+                <a href="/products" class="site-nav-sublink" data-astro-prefetch="hover">Products</a>
+              </li>
+              {navCategories.map((cat) => (
+                <li>
+                  <a
+                    href={`/category/${cat.slug}`}
+                    class="site-nav-sublink"
+                    data-astro-prefetch="hover"
+                    aria-current={pathname === `/category/${cat.slug}` ? "page" : undefined}
+                  >{cat.name}</a>
+                </li>
+              ))}
+            </ul>
+          )}
+        </li>
+        <!-- nav:links -->
+      </ul>
+      <div class="nav-actions">
+        <!-- nav:actions -->
+        <CartBadge client:only="react" />
+      </div>
+    </div>
+  </nav>
+</header>
