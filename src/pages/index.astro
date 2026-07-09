@@ -2,8 +2,11 @@
 import Layout from '../layouts/Layout.astro';
 import ProductCard from '../components/ProductCard.astro';
 import CategoryRail from '../components/CategoryRail.astro';
+import JsonLd from '../components/JsonLd.astro';
 import { productsV3 } from '@wix/stores';
 import { listStoreCategories } from '../utils/categories';
+import { resolveWixImageUrl } from '../utils/wix-image';
+import { SITE_DESCRIPTION, homePageJsonLd, DEFAULT_OG_IMAGE_ALT } from '../utils/seo';
 
 let featured: any[] = [];
 try {
@@ -17,8 +20,20 @@ try {
 }
 
 const storeCategories = await listStoreCategories();
+
+const homeDescription = SITE_DESCRIPTION;
+const homeOgImage = featured[0]
+  ? resolveWixImageUrl(featured[0].media?.main?.image, 1200, 630)
+  : undefined;
+const homeJsonLd = Astro.site ? homePageJsonLd(Astro.site, homeDescription, featured) : null;
 ---
-<Layout>
+<Layout
+  title="Quiet luxury workspace equipment"
+  description={homeDescription}
+  image={homeOgImage ?? "/og-image.png"}
+  imageAlt={DEFAULT_OG_IMAGE_ALT}
+>
+  {homeJsonLd && <JsonLd slot="head" data={homeJsonLd} />}
   <section class="relative">
     <div class="max-w-6xl mx-auto px-lg py-4xl grid grid-cols-1 md:grid-cols-2 gap-3xl items-center">
       <div class="flex flex-col gap-lg">

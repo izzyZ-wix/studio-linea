@@ -2,8 +2,11 @@
 import Layout from "../../layouts/Layout.astro";
 import ProductCard from "../../components/ProductCard.astro";
 import CategoryRail from "../../components/CategoryRail.astro";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import JsonLd from "../../components/JsonLd.astro";
 import { productsV3 } from "@wix/stores";
 import { listStoreCategories } from "../../utils/categories";
+import { collectionPageJsonLd, itemListJsonLd } from "../../utils/seo";
 
 const PAGE_SIZE = 24;
 const cursor = Astro.url.searchParams.get("cursor") ?? undefined;
@@ -42,15 +45,37 @@ function pageHref(c: string | null): string | null {
   params.set("cursor", c);
   return `/products?${params.toString()}`;
 }
+
+const listDescription =
+  "Desks, organizers, and acoustic pieces — curated as one calm, coherent workspace environment by Studio Linea.";
+const itemList = Astro.site ? itemListJsonLd(productList, Astro.site, "The Collection") : null;
+const collectionJsonLd =
+  Astro.site && !cursor
+    ? collectionPageJsonLd({
+        site: Astro.site,
+        pathname: "/products",
+        name: "The Collection",
+        description: listDescription,
+        breadcrumbs: [
+          { label: "Home", href: "/" },
+          { label: "The Collection" },
+        ],
+        itemList,
+      })
+    : null;
 ---
 
-<Layout
-  title="The Collection"
-  description="Desks, organizers, and acoustic pieces — curated as one calm, coherent workspace environment by Studio Linea."
->
+<Layout title="The Collection" description={listDescription}>
+  {collectionJsonLd && <JsonLd slot="head" data={collectionJsonLd} />}
   <section class="py-3xl border-b border-rule">
     <div class="max-w-6xl mx-auto px-lg">
-      <p class="text-mute text-xs uppercase tracking-widest">Issue No. 01</p>
+      <Breadcrumbs
+        items={[
+          { label: "Home", href: "/" },
+          { label: "The Collection" },
+        ]}
+      />
+      <p class="text-mute text-xs uppercase tracking-widest mt-md">Issue No. 01</p>
       <h1 class="font-display text-4xl md:text-5xl leading-tight mt-sm">The Collection</h1>
       <p class="text-ink-soft leading-relaxed mt-lg max-w-prose">
         Quiet luxury for the considered workspace — each piece composed to work in concert, not competition.

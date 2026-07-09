@@ -2,11 +2,14 @@
 import Layout from "../../layouts/Layout.astro";
 import ProductCard from "../../components/ProductCard.astro";
 import CategoryRail from "../../components/CategoryRail.astro";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import JsonLd from "../../components/JsonLd.astro";
 import {
   getCategoryBySlug,
   listProductsInCategory,
   listStoreCategories,
 } from "../../utils/categories";
+import { collectionPageJsonLd, itemListJsonLd, truncateDescription } from "../../utils/seo";
 
 const PAGE_SIZE = 24;
 const { slug } = Astro.params;
@@ -43,21 +46,47 @@ function pageHref(c: string | null): string | null {
   params.set("cursor", c);
   return `/category/${category!.slug}?${params.toString()}`;
 }
+
+const categoryDescription =
+  category.description ??
+  `Pieces curated for ${category.name} — considered office equipment from Studio Linea.`;
+const categoryPath = `/category/${category.slug}`;
+const itemList = Astro.site
+  ? itemListJsonLd(productList, Astro.site, category.name)
+  : null;
+const categoryJsonLd =
+  Astro.site && !cursor
+    ? collectionPageJsonLd({
+        site: Astro.site,
+        pathname: categoryPath,
+        name: category.name,
+        description: categoryDescription,
+        breadcrumbs: [
+          { label: "Home", href: "/" },
+          { label: "The Collection", href: "/products" },
+          { label: category.name },
+        ],
+        itemList,
+      })
+    : null;
 ---
 
 <Layout
   title={category.name}
-  description={category.description ?? `Pieces curated for ${category.name} — considered office equipment from Studio Linea.`}
+  description={truncateDescription(categoryDescription)}
+  image={category.imageUrl ?? undefined}
+  imageAlt={`${category.name} — Studio Linea curated space`}
 >
+  {categoryJsonLd && <JsonLd slot="head" data={categoryJsonLd} />}
   <section class="py-3xl border-b border-rule">
     <div class="max-w-6xl mx-auto px-lg">
-      <nav class="breadcrumbs" aria-label="Breadcrumb">
-        <a href="/" data-astro-prefetch="hover">Home</a>
-        <span aria-hidden="true">&middot;</span>
-        <a href="/products" data-astro-prefetch="hover">Collection</a>
-        <span aria-hidden="true">&middot;</span>
-        <span aria-current="page">{category.name}</span>
-      </nav>
+      <Breadcrumbs
+        items={[
+          { label: "Home", href: "/" },
+          { label: "The Collection", href: "/products" },
+          { label: category.name },
+        ]}
+      />
       <p class="text-mute text-xs uppercase tracking-widest mt-md">Curated Spaces</p>
       <h1 class="font-display text-4xl md:text-5xl leading-tight mt-sm">{category.name}</h1>
       {category.description ? (

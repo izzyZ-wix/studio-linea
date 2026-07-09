@@ -1,0 +1,20 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Breadcrumbs from "../components/Breadcrumbs.astro";
+---
+
+<Layout title="Page not found" description="The page you requested could not be found." noindex>
+  <div class="max-w-6xl mx-auto px-lg py-4xl">
+    <Breadcrumbs
+      items={[
+        { label: "Home", href: "/" },
+        { label: "Page not found" },
+      ]}
+    />
+    <h1 class="font-display text-4xl md:text-5xl leading-tight mt-lg">Page not found</h1>
+    <p class="text-ink-soft leading-relaxed mt-lg max-w-prose">
+      The page you are looking for may have moved or no longer exists.
+    </p>
+    <a href="/products" class="btn btn-outline mt-xl inline-flex">Browse the collection</a>
+  </div>
+</Layout>

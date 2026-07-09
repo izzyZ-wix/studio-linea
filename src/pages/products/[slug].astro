@@ -2,10 +2,13 @@
 import Layout from "../../layouts/Layout.astro";
 import ProductPurchase from "../../components/ProductPurchase.tsx";
 import SeoTags from "../../components/SeoTags.astro";
+import JsonLd from "../../components/JsonLd.astro";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
 import { productsV3, inventoryItemsV3 } from "@wix/stores";
 import { resolveWixImageUrl } from "../../utils/wix-image";
 import { getBackInStockEnabled } from "../../utils/back-in-stock";
 import { fetchLiveOffers, offersForProduct } from "../../utils/discounts";
+import { productPageJsonLd, truncateDescription } from "../../utils/seo";
 
 export const wixMetadata = {
   appDefId: "1380b703-ce81-ff05-f115-39571d94dfcd",
@@ -20,7 +23,13 @@ const { slug } = Astro.params;
 let product: any = null;
 try {
   const result = await productsV3.getProductBySlug(slug!, {
-    fields: ["CURRENCY", "PLAIN_DESCRIPTION", "INFO_SECTION_PLAIN_DESCRIPTION", "MEDIA_ITEMS_INFO"],
+    fields: [
+      "CURRENCY",
+      "PLAIN_DESCRIPTION",
+      "INFO_SECTION_PLAIN_DESCRIPTION",
+      "MEDIA_ITEMS_INFO",
+      "DIRECT_CATEGORIES_INFO",
+    ],
   });
   product = result.product;
 } catch (err) {
@@ -135,6 +144,38 @@ try {
 const seoTags = product.seoData?.tags ?? [];
 const hasSeoTags = seoTags.some((t: any) => !t.disabled);
 
+const directCategory = product.directCategories?.[0];
+const hasStock = Object.values(inventoryByVariant).some(
+  (stock) =>
+    !stock.trackQuantity ||
+    stock.quantity > 0 ||
+    stock.preorderEnabled,
+);
+const productJsonLd = Astro.site
+  ? productPageJsonLd({
+      site: Astro.site,
+      slug: slug!,
+      name: product.name ?? "Product",
+      description,
+      images: galleryItems.map((item) => item.url).filter(Boolean),
+      sku: product.sku ?? product._id,
+      price: priceAmount,
+      currency,
+      inStock: hasStock,
+      categoryName: directCategory?.name,
+      categorySlug: directCategory?.slug,
+    })
+  : null;
+
+const productBreadcrumbs = [
+  { label: "Home", href: "/" },
+  { label: "The Collection", href: "/products" },
+  ...(directCategory?.name && directCategory?.slug
+    ? [{ label: directCategory.name, href: `/category/${directCategory.slug}` }]
+    : []),
+  { label: product.name ?? "Product" },
+];
+
 const viewContentPayload = {
   id: product._id,
   name: product.name,
@@ -146,16 +187,20 @@ const viewContentPayload = {
 
 <Layout
   title={product.name ?? "Product"}
-  description={description?.slice(0, 160)}
+  description={truncateDescription(description)}
+  image={mainImageUrl ?? undefined}
+  imageAlt={product.name ?? "Product"}
+  ogType="product"
   hasSeoTags={hasSeoTags}
 >
-  {hasSeoTags && <SeoTags slot="head" tags={seoTags} />}
+  <Fragment slot="head">
+    {hasSeoTags && <SeoTags tags={seoTags} />}
+    {productJsonLd && <JsonLd data={productJsonLd} />}
+  </Fragment>
 
   <article class="product-detail">
     <div class="max-w-6xl mx-auto px-lg py-3xl">
-      <a href="/products" class="text-mute text-xs uppercase tracking-widest hover:text-accent transition-colors">
-        &larr; The Collection
-      </a>
+      <Breadcrumbs items={productBreadcrumbs} />
 
       <div class="product-detail-layout">
         <div class="product-gallery">

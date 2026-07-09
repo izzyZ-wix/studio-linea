@@ -11,7 +11,8 @@
     "release": "wix release",
     "generate": "wix generate",
     "env": "wix env",
-    "skills": "wix skills"
+    "skills": "wix skills",
+    "seo:configure": "node scripts/configure-seo.mjs"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.1",

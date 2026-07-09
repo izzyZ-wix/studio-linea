@@ -11,6 +11,7 @@ const isBuild =
 
 // https://astro.build/config
 export default defineConfig({
+  site: "https://studio-lin-9b69d2db-izzyz1.wix-site-host.com",
   vite: { plugins: [tailwindcss()] },
   integrations: [wix(), wixPages(), react()],
   security: { checkOrigin: false },

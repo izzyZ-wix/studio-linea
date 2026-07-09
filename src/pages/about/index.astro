@@ -1,18 +1,41 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import { queryAboutContent } from "../../lib/about";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import JsonLd from "../../components/JsonLd.astro";
+import { webPageJsonLd } from "../../utils/seo";
 
 const about = await queryAboutContent();
 const title = about?.title ?? "About";
 const description = about?.excerpt ?? "The Studio Linea design manifesto.";
+const aboutJsonLd = Astro.site
+  ? webPageJsonLd({
+      site: Astro.site,
+      pathname: "/about",
+      name: title,
+      description,
+      type: "AboutPage",
+      breadcrumbs: [
+        { label: "Home", href: "/" },
+        { label: title },
+      ],
+    })
+  : null;
 ---
 
-<Layout title={title} description={description}>
+<Layout title={title} description={description} image={about?.imageUrl} imageAlt={title}>
+  {aboutJsonLd && <JsonLd slot="head" data={aboutJsonLd} />}
   {about ? (
     <article>
       <header class="about-hero">
         <div class="max-w-6xl mx-auto px-lg">
-          <div class="grid grid-cols-1 md:grid-cols-12 gap-xl items-end">
+          <Breadcrumbs
+            items={[
+              { label: "Home", href: "/" },
+              { label: title },
+            ]}
+          />
+          <div class="grid grid-cols-1 md:grid-cols-12 gap-xl items-end mt-md">
             <div class="md:col-span-8">
               <p class="about-hero-kicker">{about.subtitle}</p>
               <h1 class="about-hero-title">{about.title}</h1>

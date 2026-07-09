@@ -1,16 +1,31 @@
 ---
 import Layout from "../../layouts/Layout.astro";
+import JsonLd from "../../components/JsonLd.astro";
 import { queryFaqItems } from "../../lib/faq";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import { absoluteHref, faqPageJsonLd } from "../../utils/seo";
 
 const faqItems = await queryFaqItems();
+const faqPageUrl = Astro.site ? absoluteHref("/faq", Astro.site) : undefined;
+const faqJsonLd =
+  faqPageUrl && Astro.site
+    ? faqPageJsonLd(faqItems, Astro.site, faqPageUrl)
+    : null;
 ---
 
 <Layout
   title="FAQ"
   description="Answers about Studio Linea shipping, care, returns, and warranty."
 >
+  {faqJsonLd && <JsonLd slot="head" data={faqJsonLd} />}
   <div class="max-w-6xl mx-auto px-lg py-4xl">
-    <header class="mb-3xl max-w-prose">
+    <Breadcrumbs
+      items={[
+        { label: "Home", href: "/" },
+        { label: "FAQ" },
+      ]}
+    />
+    <header class="mb-3xl max-w-prose mt-md">
       <p class="font-body text-xs uppercase tracking-[0.2em] text-mute mb-md">
         Support
       </p>
