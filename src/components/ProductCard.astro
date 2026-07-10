@@ -1,5 +1,5 @@
 ---
-import { resolveWixImageUrl } from "../utils/wix-image";
+import { resolveResponsiveImage } from "../utils/wix-image";
 import { fetchLiveOffers, offersForProduct } from "../utils/discounts";
 
 interface Props {
@@ -20,12 +20,15 @@ const { product, index } = Astro.props;
 let primaryOffer: { name: string; offer?: string } | undefined;
 try {
   const offers = await fetchLiveOffers();
-  primaryOffer = offersForProduct(offers, product._id)[0];
+  primaryOffer = product._id ? offersForProduct(offers, product._id)[0] : undefined;
 } catch (err) {
   console.error("[ProductCard] fetchLiveOffers failed:", err);
 }
 
-const imageUrl = resolveWixImageUrl(product.media?.main?.image, 600, 800);
+const cardImage = resolveResponsiveImage(product.media?.main?.image, 600, 800, {
+  widths: [400, 600, 800, 1200],
+  sizes: "(max-width: 768px) 50vw, (max-width: 1152px) 33vw, 280px",
+});
 const price = product.actualPriceRange?.minValue?.formattedAmount;
 const amount = product.actualPriceRange?.minValue?.amount;
 const currency = product.actualPriceRange?.minValue?.currency;
@@ -43,7 +46,18 @@ const indexLabel =
   data-currency={currency}
 >
   <div class="product-card-media">
-    {imageUrl && <img src={imageUrl} alt={product.name ?? "Product"} loading="lazy" />}
+    {cardImage && (
+      <img
+        src={cardImage.src}
+        srcset={cardImage.srcset}
+        sizes={cardImage.sizes}
+        width={cardImage.width}
+        height={cardImage.height}
+        alt={product.name ?? "Product"}
+        loading="lazy"
+        decoding="async"
+      />
+    )}
     {indexLabel && <span class="product-card-index">N°&nbsp;{indexLabel}</span>}
     {primaryOffer && (
       <span class="product-card-ribbon" title={primaryOffer.offer}>

@@ -1,6 +1,6 @@
 import { items } from "@wix/data";
 import { auth } from "@wix/essentials";
-import { media } from "@wix/sdk";
+import { resolveResponsiveImage } from "../utils/wix-image";
 
 const COLLECTION_ID = "About";
 
@@ -12,16 +12,27 @@ export interface AboutContent {
   manifesto: string;
   image?: string;
   imageUrl?: string;
+  responsiveImage?: ReturnType<typeof resolveResponsiveImage>;
 }
 
-function resolveImage(wixImageUrl: string | undefined): string | undefined {
+function toWixImageRef(value: string): string {
+  if (value.startsWith("wix:image://")) return value;
+  const id = value.match(/\/media\/([^/]+)/)?.[1] ?? value.match(/^([a-f0-9]+_[^/?#]+~mv2\.[^/?#]+)/i)?.[1];
+  if (id) return `wix:image://v1/${id}/${id}`;
+  return value;
+}
+
+function resolveImage(wixImageUrl: string | undefined) {
   if (!wixImageUrl) return undefined;
-  if (wixImageUrl.startsWith("http")) return wixImageUrl;
-  return media.getScaledToFillImageUrl(wixImageUrl, 1200, 900, {});
+  return resolveResponsiveImage(toWixImageRef(wixImageUrl), 960, 720, {
+    widths: [640, 960, 1440],
+    sizes: "(max-width: 768px) 100vw, 480px",
+  });
 }
 
 function mapAboutItem(item: Record<string, unknown>): AboutContent {
   const image = item.image as string | undefined;
+  const responsiveImage = resolveImage(image);
   return {
     _id: item._id as string,
     title: (item.title as string) ?? "",
@@ -29,7 +40,8 @@ function mapAboutItem(item: Record<string, unknown>): AboutContent {
     excerpt: (item.excerpt as string) ?? "",
     manifesto: (item.manifesto as string) ?? "",
     image,
-    imageUrl: resolveImage(image),
+    imageUrl: responsiveImage?.src,
+    responsiveImage,
   };
 }
 

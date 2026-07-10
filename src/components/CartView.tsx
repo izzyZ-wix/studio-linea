@@ -85,7 +85,7 @@ function resolveCartImage(image: string | undefined, width: number, height: numb
   if (image.startsWith("wix:image://")) {
     const match = image.match(/wix:image:\/\/v1\/([^/]+)/);
     if (match) {
-      return `https://static.wixstatic.com/media/${match[1]}/v1/fill/w_${width},h_${height},al_c,q_80/${match[1]}`;
+      return `https://static.wixstatic.com/media/${match[1]}/v1/fill/w_${width},h_${height},al_c,q_90,enc_auto/${match[1]}`;
     }
   }
   // Direct CDN URL — use as-is
